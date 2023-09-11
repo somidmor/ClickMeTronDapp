@@ -1,51 +1,61 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const tronWeb = window.tronWeb;
-    const contractAddress = "TKc58kSi2VnE2DPoc9QwpqGkNjMCdV9iBo"; // Replace with your deployed contract address
+    const contractAddress = "TKc58kSi2VnE2DPoc9QwpqGkNjMCdV9iBo";
     let contractInstance;
 
     const connectBtn = document.getElementById("connectWallet");
     const viewBtn = document.getElementById("viewButton");
 
-    // Ensure TronWeb is injected and available
-    if (typeof tronWeb === 'undefined') {
-        alert("TronWeb is not installed. Please install the TronLink extension!");
-        return;
+    function checkTronWeb(retries = 5) {
+        if (retries === 0) {
+            alert("TronWeb is not installed. Please install the TronLink extension!");
+            return;
+        }
+
+        if (window.tronWeb && window.tronWeb.ready) {
+            initApp();
+        } else {
+            console.log("Waiting for TronWeb...");
+            setTimeout(() => checkTronWeb(retries - 1), 1000);
+        }
     }
 
-    connectBtn.addEventListener("click", async () => {
-        try {
-            // Request user's account address
-            const addresses = await tronWeb.request({ method: 'tron_requestAccounts' });
-            if (addresses.length) {
-                connectBtn.style.display = "none";
-                viewBtn.style.display = "block";
+    function initApp() {
+        console.log("TronWeb detected!");
+
+        connectBtn.addEventListener("click", async () => {
+            try {
+                const addresses = await window.tronWeb.request({ method: 'tron_requestAccounts' });
+                if (addresses.length) {
+                    connectBtn.style.display = "none";
+                    viewBtn.style.display = "block";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Failed to connect TronLink wallet.");
             }
-        } catch (error) {
+        });
+
+        window.tronWeb.contract().at(contractAddress).then(instance => {
+            contractInstance = instance;
+        }).catch(error => {
             console.error("Error:", error);
-            alert("Failed to connect TronLink wallet.");
-        }
-    });
+            alert("There was an error fetching the contract instance.");
+        });
 
-    tronWeb.contract().at(contractAddress).then(instance => {
-        contractInstance = instance;
-    }).catch(error => {
-        console.error("Error:", error);
-        alert("There was an error fetching the contract instance.");
-    });
+        viewBtn.addEventListener("click", async () => {
+            try {
+                await contractInstance.clickButton().send({
+                    callValue: window.tronWeb.toSun(100)
+                });
 
-    viewBtn.addEventListener("click", async () => {
-        try {
-            // User signs and sends 100 TRX to the contract
-            await contractInstance.clickButton().send({
-                callValue: tronWeb.toSun(100) // Convert 100 TRX to SUN (the smallest unit)
-            });
+                const count = await contractInstance.getClickCount().call();
+                document.getElementById("counterDisplay").innerText = count.toString();
+            } catch (error) {
+                console.error("Error:", error);
+                alert("There was an error processing your request.");
+            }
+        });
+    }
 
-            // Fetch the updated count
-            const count = await contractInstance.getClickCount().call();
-            document.getElementById("counterDisplay").innerText = count.toString();
-        } catch (error) {
-            console.error("Error:", error);
-            alert("There was an error processing your request.");
-        }
-    });
+    checkTronWeb();
 });
