@@ -1,7 +1,7 @@
 // Ensure the DOM is fully loaded before executing our code
 document.addEventListener("DOMContentLoaded", function() {
     const tronWeb = window.tronWeb;
-    const contractAddress = "YOUR_CONTRACT_ADDRESS_HERE"; // Replace with your deployed contract address
+    const contractAddress = "TJCmgf5noaoLeR1c3CscombkdLEtZNPDNe"; // Replace with your deployed contract address
     let contractInstance;
 
     // Ensure TronWeb is injected and available
