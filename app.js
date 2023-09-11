@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (addresses.length) {
                     connectBtn.style.display = "none";
                     viewBtn.style.display = "block";
+                    document.getElementById("connectedAddress").innerText = "Connected Address: " + addresses[0]; // Added this line
                 }
             } catch (error) {
                 console.error("Error:", error);
